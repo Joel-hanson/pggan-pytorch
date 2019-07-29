@@ -263,12 +263,11 @@ class trainer:
                     self.x = self.add_noise(self.x)
                 self.z.data.resize_(self.loader.batchsize, self.nz).normal_(0.0, 1.0)
                 self.x_tilde = self.G(self.z)
-               
+
                 self.fx = self.D(self.x)
                 self.fx_tilde = self.D(self.x_tilde.detach())
                 
-		        loss_d = self.mse(self.fx.squeeze(), self.real_label) + \
-                                  self.mse(self.fx_tilde, self.fake_label)
+                loss_d = self.mse(self.fx.squeeze(), self.real_label) + self.mse(self.fx_tilde, self.fake_label)
                 loss_d.backward()
                 self.opt_d.step()
 
@@ -345,9 +344,11 @@ class trainer:
     def snapshot(self, path):
         if not os.path.exists(path):
             if os.name == 'nt':
-                os.system('mkdir {}'.format(path.replace('/', '\\')))
+                if not os.path.exists(path.replace('/', '\\')):
+                    os.makedirs(path.replace('/', '\\'))
             else:
-                os.system('mkdir -p {}'.format(path))
+                if not os.path.exists(path):
+                    os.makedirs(path)
         # save every 100 tick if the network is in stab phase.
         ndis = 'dis_R{}_T{}.pth.tar'.format(int(floor(self.resl)), self.globalTick)
         ngen = 'gen_R{}_T{}.pth.tar'.format(int(floor(self.resl)), self.globalTick)
